@@ -11,7 +11,7 @@ import SwiftUI
 struct Test_AR_DevelopmentApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            MeasurementView()
         }
     }
 }

@@ -1,0 +1,15 @@
+{
+  "originHash" : "596aa4b3de2bb0b56803d0717214dfda0e40b579c8415b503f8afe77918e9c4a",
+  "pins" : [
+    {
+      "identity" : "focusentity?tab=readme-ov-file",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/maxxfrazer/FocusEntity?tab=readme-ov-file",
+      "state" : {
+        "revision" : "3e08b26f863957113f4d0b2d45cf6dfbd1a41333",
+        "version" : "2.5.2"
+      }
+    }
+  ],
+  "version" : 3
+}
