@@ -251,7 +251,6 @@ final class CircularFocusEntity: FocusEntity {
     private func addCenterDot() {
         // Try to use cylinder for a perfect circle (iOS 18+), fallback to rounded box
         let planeSize: Float = 0.01
-        let dotHeight: Float = 0.002
         
         let sphereMesh = MeshResource.generateSphere(radius: planeSize)
         
