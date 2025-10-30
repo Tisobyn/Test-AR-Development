@@ -9,6 +9,7 @@ import ARKit
 import RealityKit
 
 protocol ARMeasureManager {
-    func setupARView(_ arView: ARView) 
+    func setupARView(_ arView: ARView)
+    func addPoint()
 }
 

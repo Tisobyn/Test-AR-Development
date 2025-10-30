@@ -23,4 +23,8 @@ class LengthMeasureManager: ObservableObject, ARMeasureManager {
         _ = CircularFocusEntity(on: arView, style: .classic())
     }
 
+    func addPoint() {
+        
+    }
+    
 }
