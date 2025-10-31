@@ -9,18 +9,21 @@ struct MeasurementView: View {
     
     var body: some View {
         ZStack {
-            VStack {
-                Text("Is Loading")
-                    .foregroundStyle(.red)
-            }
-            
             ARMeasurementView(manager: lengthManager)
                 .ignoresSafeArea(.all)
             
             VStack {
+                Text("State")
+                    .foregroundStyle(.red)
+                
+                Spacer()
+            }
+            
+            
+            VStack {
                 Spacer()
                 Button {
-                    
+                    lengthManager.addPoint()
                 } label: {
                     Image(systemName: "plus")
                         .font(.system(size: 48, weight: .bold))
