@@ -33,17 +33,13 @@ class LengthMeasureManager: ObservableObject, ARMeasureManager {
         let location = arView.center
         guard let result = arView.raycast(from: location, allowing: .existingPlaneInfinite, alignment: .any).first else { return }
 
-        let worldTransform = result.worldTransform
-        let pointPosition = SIMD3<Float>(worldTransform.columns.3.x,
-                                         worldTransform.columns.3.y,
-                                         worldTransform.columns.3.z)
-        
-        // 4. Create a visible marker
-        let marker = createPointMarker()
+        let pointPosition = calculatePointPosition(from: result)
+        let pointMarker = ModelEntity.createPointMarker()
+
         
         // 5. Create an AnchorEntity at the world position and add the marker to it
         let anchor = AnchorEntity(world: pointPosition)
-        anchor.addChild(marker)
+        anchor.addChild(pointMarker)
         
         // 6. Add the Anchor to the scene
         arView.scene.addAnchor(anchor)
@@ -52,12 +48,30 @@ class LengthMeasureManager: ObservableObject, ARMeasureManager {
         collisionPoints.append(anchor)
     }
     
+}
+
+extension LengthMeasureManager {
     
-    private func createPointMarker() -> ModelEntity {
-        let mesh = MeshResource.generateSphere(radius: 0.02)
-        let material = SimpleMaterial(color: .green, isMetallic: false)
-        let entity = ModelEntity(mesh: mesh, materials: [material])
-        return entity
+    private func calculatePointPosition(from raycastResult: ARRaycastResult) -> SIMD3<Float> {
+        let transform = raycastResult.worldTransform
+        
+        return SIMD3<Float>(
+            transform.columns.3.x,
+            transform.columns.3.y,
+            transform.columns.3.z
+        )
+    }
+    
+    private func addPointMarker(pointMarker: ModelEntity, to pointPosition: SIMD3<Float>) {
+        // 5. Create an AnchorEntity at the world position and add the marker to it
+        let anchor = AnchorEntity(world: pointPosition)
+        anchor.addChild(pointMarker)
+        
+        // 6. Add the Anchor to the scene
+        arView?.scene.addAnchor(anchor)
+        
+        // Store the anchor
+        collisionPoints.append(anchor)
     }
     
 }
