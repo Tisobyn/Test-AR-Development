@@ -10,6 +10,6 @@ import RealityKit
 
 protocol ARMeasureManager {
     func setupARView(_ arView: ARView)
-    func addPoint()
+    func addPointTapped()
 }
 

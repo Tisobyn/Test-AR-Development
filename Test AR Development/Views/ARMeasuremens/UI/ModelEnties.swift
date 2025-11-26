@@ -4,7 +4,7 @@ import UIKit
 extension ModelEntity {
     
     /// Creates a spherical point marker with a specific radius and color.
-    static func createPointMarker(radius: Float = 0.01, color: UIColor = .white) -> ModelEntity {
+    static func createPointMarker(radius: Float = 0.01,color: UIColor = UIColor(hex: "#FEB317")) -> ModelEntity {
         let mesh = MeshResource.generateSphere(radius: radius)
         
         var material = UnlitMaterial()

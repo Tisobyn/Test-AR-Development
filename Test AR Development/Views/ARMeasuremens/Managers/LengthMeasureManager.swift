@@ -18,7 +18,11 @@ class LengthMeasureManager: ObservableObject, ARMeasureManager {
     
     private var collisionPoints: [AnchorEntity] = [] // Add this to track placed points
     
+#if DEBUG
     private var isDebugOn = true
+#else
+    private var isDebugOn = false
+#endif
     
     func setupARView(_ arView: ARView) {
         self.arView = arView
@@ -26,17 +30,26 @@ class LengthMeasureManager: ObservableObject, ARMeasureManager {
         arConfig.planeDetection = [.horizontal, .vertical]
         arView.session.run(arConfig)
         self.focus = CircularFocusEntity(on: arView, style: .classic())
+        
+        if isDebugOn {
+            arView.debugOptions = [.showAnchorOrigins, .showFeaturePoints]
+        }
     }
 
-    func addPoint() {
+    func addPointTapped() {
+        addPointMarker()
+    }
+    
+}
+
+extension LengthMeasureManager {
+    
+    private func addPointMarker() {
         guard let arView = arView else { return }
-        let location = arView.center
-        guard let result = arView.raycast(from: location, allowing: .existingPlaneInfinite, alignment: .any).first else { return }
-
-        let pointPosition = calculatePointPosition(from: result)
+    
+        let pointPosition = calculatePointPosition()
         let pointMarker = ModelEntity.createPointMarker()
-
-        
+                
         // 5. Create an AnchorEntity at the world position and add the marker to it
         let anchor = AnchorEntity(world: pointPosition)
         anchor.addChild(pointMarker)
@@ -48,18 +61,9 @@ class LengthMeasureManager: ObservableObject, ARMeasureManager {
         collisionPoints.append(anchor)
     }
     
-}
-
-extension LengthMeasureManager {
-    
-    private func calculatePointPosition(from raycastResult: ARRaycastResult) -> SIMD3<Float> {
-        let transform = raycastResult.worldTransform
-        
-        return SIMD3<Float>(
-            transform.columns.3.x,
-            transform.columns.3.y,
-            transform.columns.3.z
-        )
+    private func calculatePointPosition() -> SIMD3<Float> {
+        guard let focus = self.focus else { return SIMD3<Float>(0,0,0) }
+        return focus.position(relativeTo: nil)
     }
     
     private func addPointMarker(pointMarker: ModelEntity, to pointPosition: SIMD3<Float>) {
