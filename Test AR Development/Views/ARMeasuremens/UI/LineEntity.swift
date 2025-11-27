@@ -22,6 +22,7 @@ final class LineEntity: Entity, HasAnchoring {
         self.startingPoint = startingPoint
         self.endingPoint = endingPoint
         super.init()
+        self.name = enityName
         addLine(startPoint: startingPoint, endPoint: endingPoint)
         arView.scene.addAnchor(self)
     }
@@ -38,8 +39,8 @@ final class LineEntity: Entity, HasAnchoring {
     }
     
     private func createLineEntity(distance: Float) -> ModelEntity {
-        let cylinder = MeshResource.generateBox(size: [0.01, 0.01, distance])
-        let material = SimpleMaterial(color: .white, isMetallic: false)
+        let cylinder = MeshResource.generateBox(size: [0.005, 0.005, distance])
+        let material = UnlitMaterial(color: .white)
         let entity = ModelEntity(mesh: cylinder, materials: [material])
         entity.name = enityName
         entity.position = (startingPoint + endingPoint) / 2

@@ -38,8 +38,10 @@ final class TemporalLineEntity: Entity, HasAnchoring {
     }
     
     private func createLineEntity(distance: Float) -> ModelEntity {
-        let cylinder = MeshResource.generateBox(size: [0.01, 0.01, distance])
-        let material = SimpleMaterial(color: .red, isMetallic: false)
+        let cylinder = MeshResource.generateBox(size: [0.005, 0.005, distance])
+        var material = UnlitMaterial(color: .white)
+        material.blending = .transparent(opacity: 0.5)
+        
         let entity = ModelEntity(mesh: cylinder, materials: [material])
         entity.name = enityName
         entity.position = (startingPoint + endingPoint) / 2
