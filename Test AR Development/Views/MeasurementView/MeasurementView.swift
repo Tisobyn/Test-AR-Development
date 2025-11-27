@@ -13,9 +13,12 @@ struct MeasurementView: View {
                 .ignoresSafeArea(.all)
             
             VStack {
-                Text("State")
+                Text(lengthManager.message)
                     .foregroundStyle(.red)
-                
+                Text(lengthManager.message2)
+                    .foregroundStyle(.yellow)
+                Text(lengthManager.message3)
+                    .foregroundStyle(.blue)
                 Spacer()
             }
             
@@ -23,7 +26,7 @@ struct MeasurementView: View {
             VStack {
                 Spacer()
                 Button {
-                    lengthManager.addPoint()
+                    lengthManager.addPointTapped()
                 } label: {
                     Image(systemName: "plus")
                         .font(.system(size: 48, weight: .bold))

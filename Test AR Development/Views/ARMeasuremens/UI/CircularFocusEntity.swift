@@ -15,17 +15,18 @@ final class CircularFocusEntity: FocusEntity {
     /// Gap between the two half-circles in radians. Default is π/6 (30 degrees)
     var ringGap: Float = Float.pi / 6
     var accentColor: UIColor = UIColor(hex: "#FEB317")
+    var enityName = "CircularFocusEntity"
     
     required init(on arView: ARView, style: FocusEntityComponent.Style) {
         let focusComponent = FocusEntityComponent(style: style)
         super.init(on: arView, focus: focusComponent)
-        self.name = "CircularFocusEntity"
+        self.name = enityName
         setupCircularVisuals()
     }
     
     required init(on arView: ARView, focus: FocusEntityComponent) {
         super.init(on: arView, focus: focus)
-        self.name = "CircularFocusEntity"
+        self.name = enityName
         setupCircularVisuals()
     }
     
