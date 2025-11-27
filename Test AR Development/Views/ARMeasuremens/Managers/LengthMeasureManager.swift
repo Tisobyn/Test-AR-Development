@@ -14,13 +14,13 @@ import FocusEntity
 class LengthMeasureManager: NSObject, ObservableObject, ARMeasureManager {
     
     private weak var arView: ARView?
-    private weak var focus: CircularFocusEntity?
-    private weak var tempLineEntity: LineEntity?
-    var anchorEntities: [UUID: AnchorEntity] = [:]
-    var lineEntity: ModelEntity?
+    private var focus: CircularFocusEntity?
+    private var tempLineEntity: TemporalLineEntity?
+    private var lineEntity: LineEntity?
     
-    private var collisionPoints: [AnchorEntity] = [] // Add this to track placed points
-    private var collisionPoints2: [AnchorPoint] = [] // Add this to t
+    var anchorEntities: [UUID: AnchorEntity] = [:]
+
+    private var collisionPoints: [AnchorEntity] = [] 
     private var canDrawLine: Bool = false
     
     @Published var message: String = "Starting AR..."
@@ -38,8 +38,6 @@ class LengthMeasureManager: NSObject, ObservableObject, ARMeasureManager {
         arConfig.planeDetection = [.horizontal, .vertical]
         arView.session.run(arConfig)
         arView.session.delegate = self
-//
-//       self.focus = CircularFocusEntity(on: arView, style: .classic())
         
         if isDebugOn {
             arView.debugOptions = [.showAnchorOrigins, .showFeaturePoints]
@@ -68,9 +66,10 @@ extension LengthMeasureManager {
     
     private func addLineMarker() {
         guard let arView = arView else { return }
-        let starting = collisionPoints[0].position(relativeTo: nil)
-        let ending = collisionPoints[1].position(relativeTo: nil)
-        let lineEntity = LineEntity(on: arView, startPoint: starting, endPoint: ending)
+        let lastIndexOfPoints = collisionPoints.count - 1
+        let startingPoint = collisionPoints[lastIndexOfPoints-1].position(relativeTo: nil)
+        let endingPoint = collisionPoints[lastIndexOfPoints].position(relativeTo: nil)
+        _ = LineEntity(on: arView, startingPoint: startingPoint, endingPoint: endingPoint)
     }
     
     private func calculatePointPosition() -> SIMD3<Float> {
@@ -98,14 +97,16 @@ extension LengthMeasureManager: ARSessionDelegate {
             // Logic to update user instructions based on state
             if case .normal = camera.trackingState {
                 self.message = "Tap screen to place point"
+                
                 if let arView = self.arView,
                    self.focus == nil
                 {
                     self.focus = CircularFocusEntity(on: arView, style: .classic())
                     
                     if let focus = self.focus,
-                       let lastPoint = self.collisionPoints.last {
-                        self.tempLineEntity = LineEntity(
+                       let lastPoint = self.collisionPoints.last
+                    {
+                        self.tempLineEntity = TemporalLineEntity(
                             on: arView,
                             startPoint: lastPoint.position(relativeTo: nil),
                             endPoint: focus.position(relativeTo: nil)
@@ -139,6 +140,7 @@ extension LengthMeasureManager: ARSessionDelegate {
     }
     
     func session(_ session: ARSession, didUpdate anchors: [ARAnchor]) {
+        print("===== anchors \(anchors.count): \(anchors.map{ $0.name ?? "unknown"})")
         guard let lastPoint = collisionPoints.last,
               let arView = self.arView,
               let focus = self.focus

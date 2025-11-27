@@ -1,5 +1,5 @@
 //
-//  LineEntity.swift
+//  TemporalLineEntity.swift
 //  Test AR Development
 //
 //  Created by Yermek Sabyrzhan on 27.11.2025.
@@ -10,19 +10,19 @@ import FocusEntity
 import ARKit
 
 @MainActor
-final class LineEntity: Entity, HasAnchoring {
+final class TemporalLineEntity: Entity, HasAnchoring {
     
     internal weak var arView: ARView?
-    let enityName = "LineEntity"
-    private var startingPoint: SIMD3<Float>
-    private var endingPoint: SIMD3<Float>
+    let enityName = "TemporalLineEntity"
+    var startingPoint: SIMD3<Float>
+    var endingPoint: SIMD3<Float>
     
-    init(on arView: ARView, startingPoint: SIMD3<Float>, endingPoint: SIMD3<Float>) {
+    init(on arView: ARView, startPoint: SIMD3<Float>, endPoint: SIMD3<Float>) {
         self.arView = arView
-        self.startingPoint = startingPoint
-        self.endingPoint = endingPoint
+        self.startingPoint = startPoint
+        self.endingPoint = endPoint
         super.init()
-        addLine(startPoint: startingPoint, endPoint: endingPoint)
+        addLine(startPoint: startPoint, endPoint: endPoint)
         arView.scene.addAnchor(self)
     }
     
@@ -39,12 +39,25 @@ final class LineEntity: Entity, HasAnchoring {
     
     private func createLineEntity(distance: Float) -> ModelEntity {
         let cylinder = MeshResource.generateBox(size: [0.01, 0.01, distance])
-        let material = SimpleMaterial(color: .white, isMetallic: false)
+        let material = SimpleMaterial(color: .red, isMetallic: false)
         let entity = ModelEntity(mesh: cylinder, materials: [material])
         entity.name = enityName
         entity.position = (startingPoint + endingPoint) / 2
         entity.look(at: endingPoint, from: entity.position, relativeTo: nil)
         return entity
+    }
+    
+    public func changeEndPoint(_ newStartPoint: SIMD3<Float>,_ newEndPoint: SIMD3<Float>) {
+        if let entity = self.children.first?.findEntity(named: enityName) {
+            self.removeChild(entity)
+        }
+        
+        self.endingPoint = newEndPoint
+        self.startingPoint = newStartPoint
+        let direction = newEndPoint - newStartPoint
+        let distance = length(direction)
+        let entity = createLineEntity(distance: distance)
+        self.addChild(entity)
     }
     
 }
