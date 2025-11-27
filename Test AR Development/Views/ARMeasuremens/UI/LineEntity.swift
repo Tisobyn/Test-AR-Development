@@ -39,7 +39,7 @@ final class LineEntity: Entity, HasAnchoring {
     }
     
     private func createLineEntity(distance: Float) -> ModelEntity {
-        let cylinder = MeshResource.generateBox(size: [0.005, 0.005, distance])
+        let cylinder = MeshResource.generateBox(size: [0.005, 0.005, distance], cornerRadius: 0.0025)
         let material = UnlitMaterial(color: .white)
         let entity = ModelEntity(mesh: cylinder, materials: [material])
         entity.name = enityName

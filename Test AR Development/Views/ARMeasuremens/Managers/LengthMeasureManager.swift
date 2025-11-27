@@ -58,7 +58,7 @@ extension LengthMeasureManager {
     private func addPointMarker() {
         guard let arView = arView else { return }
         let pointPosition = calculatePointPosition()
-        let pointMarker = ModelEntity.createPointMarker()
+        let pointMarker = ModelEntity.createPointMarker(color: .white)
         let anchor = AnchorEntity(world: pointPosition)
         anchor.addChild(pointMarker)
         arView.scene.addAnchor(anchor)
@@ -107,7 +107,6 @@ extension LengthMeasureManager {
     
     private func initializeTemporaryLine(by trackingState: ARCamera.TrackingState) {
         guard case .normal = trackingState else { return }
-        
         guard
             let focus = focus,
             let arView = self.arView,
