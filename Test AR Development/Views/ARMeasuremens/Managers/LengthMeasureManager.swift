@@ -15,6 +15,9 @@ class LengthMeasureManager: NSObject, ObservableObject, ARMeasureManager {
     
     private weak var arView: ARView?
     private weak var focus: CircularFocusEntity?
+    private weak var tempLineEntity: LineEntity?
+    var anchorEntities: [UUID: AnchorEntity] = [:]
+    var lineEntity: ModelEntity?
     
     private var collisionPoints: [AnchorEntity] = [] // Add this to track placed points
     private var collisionPoints2: [AnchorPoint] = [] // Add this to t
@@ -31,7 +34,6 @@ class LengthMeasureManager: NSObject, ObservableObject, ARMeasureManager {
     
     func setupARView(_ arView: ARView) {
         self.arView = arView
-        
         let arConfig = ARWorldTrackingConfiguration()
         arConfig.planeDetection = [.horizontal, .vertical]
         arView.session.run(arConfig)
@@ -46,7 +48,7 @@ class LengthMeasureManager: NSObject, ObservableObject, ARMeasureManager {
 
     func addPointTapped() {
         addPointMarker()
-//        if canDrawLine { drawLineBetweenLastTwoPoints() }
+        if canDrawLine { addLineMarker() }
     }
     
 }
@@ -64,82 +66,18 @@ extension LengthMeasureManager {
         canDrawLine = collisionPoints.count >= 2
     }
     
+    private func addLineMarker() {
+        guard let arView = arView else { return }
+        let starting = collisionPoints[0].position(relativeTo: nil)
+        let ending = collisionPoints[1].position(relativeTo: nil)
+        let lineEntity = LineEntity(on: arView, startPoint: starting, endPoint: ending)
+    }
+    
     private func calculatePointPosition() -> SIMD3<Float> {
         guard let focus = self.focus else { return SIMD3<Float>(0,0,0) }
         return focus.position(relativeTo: nil)
     }
-    
-//    private func drawLineBetweenLastTwoPoints() {
-//        guard let arView = arView else { return }
-//        
-//        let count = collisionPoints.count
-//        guard count >= 2 else { return }
-//        
-//        let startAnchor = collisionPoints[count - 2]
-//        let endAnchor = collisionPoints[count - 1]
-//        
-//        let startPosition = startAnchor.position(relativeTo: nil)
-//        let endPosition = endAnchor.position(relativeTo: nil)
-//        
-//        let vector = endPosition - startPosition
-//        let distance = length(vector)
-//        let midpoint = (startPosition + endPosition) / 2
-//        
-//        // --- NEW CODE: Add the Text Label ---
-////        addMeasurementText(distance: distance, at: midpoint)
-//        // ------------------------------------
-//        
-//        // ... (Your existing line drawing code remains below) ...
-//        let lineMesh = MeshResource.generateBox(size: [0.005, 0.005, distance])
-//        let lineMaterial = UnlitMaterial(color: .white)
-//        let lineEntity = ModelEntity(mesh: lineMesh, materials: [lineMaterial])
-//        
-//        let lineAnchor = AnchorEntity(world: midpoint)
-//        lineAnchor.addChild(lineEntity)
-//        lineAnchor.look(at: endPosition, from: midpoint, relativeTo: nil)
-//        
-//        arView.scene.addAnchor(lineAnchor)
-//    }
-    
-    private func addMeasurementText(distance: Float, at position: SIMD3<Float>) {
-//        guard let arView = arView else { return }
-//        
-//        // 1. Format the distance (Meters to Centimeters)
-//        // %.1f means 1 decimal place (e.g., "15.4 cm")
-//        let cmValue = distance * 100
-//        let textMesh = MeshResource.generateText(
-//            String(format: "%.1f cm", cmValue),
-//            extrusionDepth: 0.01,
-//            font: .systemFont(ofSize: 0.05, weight: .bold),
-//            containerFrame: .zero,
-//            alignment: .center,
-//            lineBreakMode: .byCharWrapping
-//        )
-//        
-//        // 2. Create Material (Bright White for visibility)
-//        let textMaterial = UnlitMaterial(color: .white)
-//        let textEntity = ModelEntity(mesh: textMesh, materials: [textMaterial])
-//        
-//        // 3. Create an Anchor at the midpoint
-//        let textAnchor = AnchorEntity(world: position)
-//        
-//        // 4. Offset the text slightly UP (Y-axis) so it floats above the line
-//        // Note: In AR, +Y is usually "up" relative to the world or anchor
-//        textEntity.position.y += 0.05
-//        
-//        // 5. Add Billboard Component
-//        // This makes the text automatically rotate to face the camera at all times
-//        textEntity.components.set(BillboardComponent())
-//        
-//        textAnchor.addChild(textEntity)
-//        arView.scene.addAnchor(textAnchor)
-//        
-//        // Track this anchor if you want to clear it later
-//        collisionPoints.append(textAnchor)
-    }
-    
-    
-    
+
 }
 
 extension LengthMeasureManager: ARSessionDelegate {
@@ -160,10 +98,19 @@ extension LengthMeasureManager: ARSessionDelegate {
             // Logic to update user instructions based on state
             if case .normal = camera.trackingState {
                 self.message = "Tap screen to place point"
-                if let arview = self.arView,
+                if let arView = self.arView,
                    self.focus == nil
                 {
-                    self.focus = CircularFocusEntity(on: arview, style: .classic())
+                    self.focus = CircularFocusEntity(on: arView, style: .classic())
+                    
+                    if let focus = self.focus,
+                       let lastPoint = self.collisionPoints.last {
+                        self.tempLineEntity = LineEntity(
+                            on: arView,
+                            startPoint: lastPoint.position(relativeTo: nil),
+                            endPoint: focus.position(relativeTo: nil)
+                        )
+                    }
                 }
                 
             } else {
@@ -174,48 +121,9 @@ extension LengthMeasureManager: ARSessionDelegate {
     }
     
     func session(_ session: ARSession, didUpdate frame: ARFrame) {
-        
-        // removeAllLine
-        // makeTempLine
-        makeTempLine()
-        // makeStableLine
     }
     
-    private func removeAllLines() {
-       
-    }
-    
-    private func makeTempLine() {
-        guard let lastPoint = collisionPoints.last else { return }
-        guard let focus else { return }
-        
-        let pointPosition = lastPoint.position
-        let finalPosition = focus.position
-        drawTempLine(from: pointPosition, to: finalPosition)
-    }
-    
-    func drawTempLine(from beginigPosition: SIMD3<Float>, to finalPosition: SIMD3<Float>) {
-        let vector = beginigPosition - finalPosition
-        let distance = length(vector)
-        let midpoint = (beginigPosition + finalPosition) / 2
-        
-        let lineMesh =  MeshResource.generateBox(size: [0.005, 0.005, distance])
-        let lineMaterial = UnlitMaterial(color: .white)
-        let lineEntity = ModelEntity(mesh: lineMesh, materials: [lineMaterial])
-     
-        
-        let lineAnchor = AnchorEntity(world: midpoint)
-        
-        lineAnchor.name = "temp-LineAnchor"
-        lineAnchor.addChild(lineEntity)
-        lineAnchor.look(at: finalPosition, from: midpoint, relativeTo: nil)
-        
-        arView?.scene.addAnchor(lineAnchor)
-    }
-    
-    private func makeStableLines() {
-        
-    }
+    private func removeAllLines() {}
     
     func sessionShouldAttemptRelocalization(_ session: ARSession) -> Bool {
         return true
@@ -223,27 +131,19 @@ extension LengthMeasureManager: ARSessionDelegate {
     
     // 2. ANCHOR UPDATES (Use message2 for statistics)
     func session(_ session: ARSession, didAdd anchors: [ARAnchor]) {
-//        collisionPoints2.append(contentsOf: anchors)
-        updateAnchorStats()
+   
     }
     
     func session(_ session: ARSession, didRemove anchors: [ARAnchor]) {
       // remove
-        updateAnchorStats()
     }
     
     func session(_ session: ARSession, didUpdate anchors: [ARAnchor]) {
-        updateAnchorStats()
-    }
-    
-    private func updateAnchorStats() {
-        // Calculate stats
-        let pointsCount = collisionPoints.count
-        
-        DispatchQueue.main.async {
-            // e.g., "Active Points: 4"
-            self.message2 = "Active Points: \(pointsCount)"
-        }
+        guard let lastPoint = collisionPoints.last,
+              let arView = self.arView,
+              let focus = self.focus
+        else { return }
+        self.tempLineEntity?.changeEndPoint(lastPoint.position(relativeTo: nil), focus.position(relativeTo: nil))
     }
     
     // 2. Handle Errors
