@@ -15,10 +15,8 @@ struct MeasurementView: View {
             VStack {
                 Text(lengthManager.message)
                     .foregroundStyle(.red)
-                Text(lengthManager.message2)
+                Text(lengthManager.status)
                     .foregroundStyle(.yellow)
-                Text(lengthManager.message3)
-                    .foregroundStyle(.blue)
                 Spacer()
             }
             

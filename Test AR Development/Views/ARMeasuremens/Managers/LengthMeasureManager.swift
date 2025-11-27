@@ -24,8 +24,8 @@ class LengthMeasureManager: NSObject, ObservableObject, ARMeasureManager {
     private var canDrawLine: Bool = false
     
     @Published var message: String = "Starting AR..."
-    @Published var message2: String = ""
-    @Published var message3: String = ""
+    @Published var status: String = ""
+    
 #if DEBUG
     private var isDebugOn = false
 #else
@@ -50,6 +50,8 @@ class LengthMeasureManager: NSObject, ObservableObject, ARMeasureManager {
     }
     
 }
+
+// UI added in Point Tapped
 
 extension LengthMeasureManager {
     
@@ -79,77 +81,91 @@ extension LengthMeasureManager {
 
 }
 
+// Function for UI used in ARSessionDelegate
+extension LengthMeasureManager {
+    
+    private func updateMessages(by trackingState: ARCamera.TrackingState) {
+        switch trackingState {
+        case .notAvailable:
+            self.status = "Tracking: Unavailable"
+            self.message = "Move iPhone slowly..."
+        case .limited(let reason):
+            self.status = "Tracking: Limited (\(reason))"
+            self.message = "Move iPhone slowly..."
+        case .normal:
+            self.status = "Tracking: Normal"
+            self.message = "Tap button to place point"
+        }
+    }
+    
+    private func ensureFocusEntity(by trackingState: ARCamera.TrackingState) {
+        guard case .normal = trackingState else { return }
+        guard self.focus == nil else { return }
+        guard let arView = self.arView else { return }
+        self.focus = CircularFocusEntity(on: arView, style: .classic())
+    }
+    
+    private func initializeTemporaryLine(by trackingState: ARCamera.TrackingState) {
+        guard case .normal = trackingState else { return }
+        
+        guard
+            let focus = focus,
+            let arView = self.arView,
+            let lastPoint = self.collisionPoints.last
+        else { return }
+        
+        self.tempLineEntity = TemporalLineEntity(
+            on: arView,
+            startPoint: lastPoint.position(relativeTo: nil),
+            endPoint: focus.position(relativeTo: nil)
+        )
+    }
+    
+}
+
 extension LengthMeasureManager: ARSessionDelegate {
 
     // 1. TRACKING STATE (Use message3 for technical details)
     func session(_ session: ARSession, cameraDidChangeTrackingState camera: ARCamera) {
-        var status = "Tracking: Normal"
-        switch camera.trackingState {
-        case .notAvailable: status = "Tracking: Unavailable"
-        case .limited(let reason): status = "Tracking: Limited (\(reason))"
-        case .normal: status = "Tracking: Normal"
-        }
-        
-        // Update UI on the Main Thread
+        self.updateMessages(by: camera.trackingState)
+
         DispatchQueue.main.async {
-            self.message3 = status
-            
-            // Logic to update user instructions based on state
-            if case .normal = camera.trackingState {
-                self.message = "Tap screen to place point"
-                
-                if let arView = self.arView,
-                   self.focus == nil
-                {
-                    self.focus = CircularFocusEntity(on: arView, style: .classic())
-                    
-                    if let focus = self.focus,
-                       let lastPoint = self.collisionPoints.last
-                    {
-                        self.tempLineEntity = TemporalLineEntity(
-                            on: arView,
-                            startPoint: lastPoint.position(relativeTo: nil),
-                            endPoint: focus.position(relativeTo: nil)
-                        )
-                    }
-                }
-                
-            } else {
-                self.message = "Move iPhone slowly..."
-                // remove focus
-            }
+            self.ensureFocusEntity(by: camera.trackingState)
+            self.initializeTemporaryLine(by: camera.trackingState)
         }
     }
     
-    func session(_ session: ARSession, didUpdate frame: ARFrame) {
-    }
+    func session(_ session: ARSession, didUpdate frame: ARFrame) {}
     
-    private func removeAllLines() {}
-    
-    func sessionShouldAttemptRelocalization(_ session: ARSession) -> Bool {
-        return true
-    }
     
     // 2. ANCHOR UPDATES (Use message2 for statistics)
-    func session(_ session: ARSession, didAdd anchors: [ARAnchor]) {
-   
-    }
+    func session(_ session: ARSession, didAdd anchors: [ARAnchor]) { }
     
-    func session(_ session: ARSession, didRemove anchors: [ARAnchor]) {
-      // remove
-    }
+    func session(_ session: ARSession, didRemove anchors: [ARAnchor]) { }
     
     func session(_ session: ARSession, didUpdate anchors: [ARAnchor]) {
-        print("===== anchors \(anchors.count): \(anchors.map{ $0.name ?? "unknown"})")
+        print("===== anchors \(anchors.count): \(anchors.map { $0.name ?? "unknown"})")
         guard let lastPoint = collisionPoints.last,
               let arView = self.arView,
               let focus = self.focus
         else { return }
+        
         self.tempLineEntity?.changeEndPoint(lastPoint.position(relativeTo: nil), focus.position(relativeTo: nil))
     }
     
-    // 2. Handle Errors
-    // If the session crashes (e.g. camera in use by another app), handle it here.
+    // Handling Errors
+    
+    func sessionShouldAttemptRelocalization(_ session: ARSession) -> Bool { return true }
+
+    func sessionWasInterrupted(_ session: ARSession) { self.message = "Session interrupted." }
+
+    func sessionInterruptionEnded(_ session: ARSession) { 
+        self.message = "Session resumed. Resetting tracking..."
+        if let config = session.configuration {
+            session.run(config, options: [.resetTracking, .removeExistingAnchors])
+        }
+    }
+    
     func session(_ session: ARSession, didFailWithError error: Error) {
         guard let arError = error as? ARError else { return }
         
@@ -168,21 +184,4 @@ extension LengthMeasureManager: ARSessionDelegate {
         }
     }
     
-    // 3. Handle Interruptions
-    // Examples: User receives a phone call or minimizes the app.
-    func sessionWasInterrupted(_ session: ARSession) {
-        self.message = "Session interrupted."
-        // Create a visual blur or hide content if necessary
-    }
-    
-    // 4. Handle Interruption Ended
-    // When user returns to the app.
-    func sessionInterruptionEnded(_ session: ARSession) {
-        self.message = "Session resumed. Resetting tracking..."
-        
-        // Optional: Reset tracking if the user moved significantly while the app was backgrounded
-        if let config = session.configuration {
-            session.run(config, options: [.resetTracking, .removeExistingAnchors])
-        }
-    }
 }
