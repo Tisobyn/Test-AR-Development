@@ -60,61 +60,69 @@ final class LineEntity: Entity, HasAnchoring {
     private func addDistanceLabel(distance: Float, startPoint: SIMD3<Float>, endPoint: SIMD3<Float>) {
         guard let arView = arView else { return }
 
-        // 1. Create text
+        // 1. Create Text
         let distanceText = String(format: "%.2f m", distance)
+        let font = MeshResource.Font.systemFont(ofSize: 0.02, weight: .bold)
         
-        // Text mesh
         let textMesh = MeshResource.generateText(
             distanceText,
             extrusionDepth: 0.001,
-            font: .systemFont(ofSize: 0.02, weight: .medium),
-            containerFrame: CGRect(x: 0, y: 0, width: 1, height: 1),
+            font: font,
+            containerFrame: .zero,
             alignment: .center,
             lineBreakMode: .byTruncatingTail
         )
+        
         let textMaterial = UnlitMaterial(color: .black)
         let textEntity = ModelEntity(mesh: textMesh, materials: [textMaterial])
-
-        // 2. Background plane (or rounded rectangle)
-        let padding: Float = 0.01
+        
+        // Center the text
         let textBounds = textMesh.bounds
-        let width = Float(textBounds.extents.x) + padding
-        let height = Float(textBounds.extents.y) + padding
-        let depth: Float = 0.001
+        textEntity.position = -textBounds.center
+        textEntity.position.z += 0.002 // Text sits in front of background
+
+        // 2. Create Background (Plane)
+        // We use a Plane because it handles Corner Radius correctly (unlike a thin Box)
+        let padding: Float = 0.01
+        let bgWidth = textBounds.extents.x + (padding * 2)
+        let bgHeight = textBounds.extents.y + (padding * 1.5)
         
         let bgMesh = MeshResource.generatePlane(
-            width: width,
-            depth: height,
-            cornerRadius: height / 2
+            width: bgWidth,
+            depth: bgHeight,
+            cornerRadius: bgHeight / 2 // Fully rounded ends
         )
+        
         let bgMaterial = UnlitMaterial(color: .white)
         let bgEntity = ModelEntity(mesh: bgMesh, materials: [bgMaterial])
+        
+        // ROTATE PLANE: Planes lie flat (X-Z). Rotate 90deg on X to make it stand up (X-Y).
+        bgEntity.orientation = simd_quatf(angle: .pi/2, axis: [1, 0, 0])
 
-        // 3. Container entity
+        // 3. Container
         let container = Entity()
         container.addChild(bgEntity)
         container.addChild(textEntity)
 
-        // Center text on background
-        textEntity.position = SIMD3<Float>(0, 0, depth/2 + 0.0001) // slightly in front
-        bgEntity.position = SIMD3<Float>(0, 0, 0)
-
-        // Place container at center of line
+        // Position container
         container.position = (startPoint + endPoint) / 2
-
-        // Add container as child to line entity
+        container.position.y += 0.03
+        
         self.addChild(container)
 
-        // 4. Billboard behavior: rotate container toward camera every frame
+        // 4. Billboard (Face Camera)
         arView.scene.subscribe(to: SceneEvents.Update.self) { [weak container, weak arView] _ in
             guard let container = container, let arView = arView else { return }
-
-            // Get camera position
+            
             let cameraPos = arView.cameraTransform.translation
-            let direction = normalize(cameraPos - container.position)
-
-            // Rotate container to face camera
+            
+            // Step A: Look at the camera (This points the BACK of the object at the camera)
             container.look(at: cameraPos, from: container.position, relativeTo: nil)
+            
+            // Step B: Rotate 180 degrees (PI) on Y-axis to show the FRONT
+            // This fixes both the "Mirrored Text" and the "Invisible Plane"
+            container.transform.rotation *= simd_quatf(angle: .pi, axis: [0, 1, 0])
+            
         }.store(in: &labelCancellables)
     }
     
