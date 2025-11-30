@@ -115,9 +115,10 @@ extension LengthMeasureManager {
         
         self.tempLineEntity = TemporalLineEntity(
             on: arView,
-            startPoint: lastPoint.position(relativeTo: nil),
-            endPoint: focus.position(relativeTo: nil)
+            startingPoint: lastPoint.position(relativeTo: nil),
+            endingPoint: focus.position(relativeTo: nil)
         )
+        
     }
     
 }
@@ -134,7 +135,14 @@ extension LengthMeasureManager: ARSessionDelegate {
         }
     }
     
-    func session(_ session: ARSession, didUpdate frame: ARFrame) {}
+    func session(_ session: ARSession, didUpdate frame: ARFrame) {
+        guard let tempLineEntity = tempLineEntity,
+              let lastPoint = collisionPoints.last,
+              let focus = self.focus
+        else { return }
+        print("=== here")
+        tempLineEntity.changePoints(lastPoint.position(relativeTo: nil), focus.position(relativeTo: nil))
+    }
     
     
     // 2. ANCHOR UPDATES (Use message2 for statistics)
@@ -142,15 +150,7 @@ extension LengthMeasureManager: ARSessionDelegate {
     
     func session(_ session: ARSession, didRemove anchors: [ARAnchor]) { }
     
-    func session(_ session: ARSession, didUpdate anchors: [ARAnchor]) {
-        print("===== anchors \(anchors.count): \(anchors.map { $0.name ?? "unknown"})")
-        guard let lastPoint = collisionPoints.last,
-              let arView = self.arView,
-              let focus = self.focus
-        else { return }
-        
-        self.tempLineEntity?.changeEndPoint(lastPoint.position(relativeTo: nil), focus.position(relativeTo: nil))
-    }
+    func session(_ session: ARSession, didUpdate anchors: [ARAnchor]) { }
     
     // Handling Errors
     

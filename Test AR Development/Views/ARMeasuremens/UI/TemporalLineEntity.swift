@@ -20,12 +20,12 @@ final class TemporalLineEntity: Entity, HasAnchoring {
     
     private var labelCancellables = Set<AnyCancellable>()
     
-    init(on arView: ARView, startPoint: SIMD3<Float>, endPoint: SIMD3<Float>) {
+    init(on arView: ARView, startingPoint: SIMD3<Float>, endingPoint: SIMD3<Float>) {
         self.arView = arView
-        self.startingPoint = startPoint
-        self.endingPoint = endPoint
+        self.startingPoint = startingPoint
+        self.endingPoint = endingPoint
         super.init()
-        addLine(startPoint: startPoint, endPoint: endPoint)
+        addLine(startingPoint: startingPoint, endingPoint: endingPoint)
         arView.scene.addAnchor(self)
     }
     
@@ -33,8 +33,8 @@ final class TemporalLineEntity: Entity, HasAnchoring {
         fatalError("init() has not been implemented")
     }
     
-    private func addLine(startPoint: SIMD3<Float>, endPoint: SIMD3<Float>) {
-        let direction = endPoint - startPoint
+    private func addLine(startingPoint: SIMD3<Float>, endingPoint: SIMD3<Float>) {
+        let direction = endingPoint - startingPoint
         let distance = length(direction)
         let entity = createLineEntity(distance: distance)
         self.addChild(entity)
@@ -52,23 +52,21 @@ final class TemporalLineEntity: Entity, HasAnchoring {
         return entity
     }
     
-    public func changeEndPoint(_ newStartPoint: SIMD3<Float>,_ newEndPoint: SIMD3<Float>) {
+    public func changePoints(_ newstartingPoint: SIMD3<Float>,_ newendingPoint: SIMD3<Float>) {
         if let entity = self.children.first?.findEntity(named: enityName) {
             self.removeChild(entity)
         }
         
-        self.endingPoint = newEndPoint
-        self.startingPoint = newStartPoint
-        let direction = newEndPoint - newStartPoint
+        self.endingPoint = newendingPoint
+        self.startingPoint = newstartingPoint
+        let direction = newendingPoint - newstartingPoint
         let distance = length(direction)
         let entity = createLineEntity(distance: distance)
         
         self.addChild(entity)
     }
     
-    private func addDistanceLabel(distance: Float, startPoint: SIMD3<Float>, endPoint: SIMD3<Float>) {
-        guard let arView = arView else { return }
-        
+    private func addDistanceLabel(distance: Float, startingPoint: SIMD3<Float>, endingPoint: SIMD3<Float>) {        
         // A. Create components using subfunctions
         let textEntity = createDistanceLabelTextEntity(distance: distance)
         
@@ -87,7 +85,7 @@ final class TemporalLineEntity: Entity, HasAnchoring {
         
         // D. Position Container
         // 1. Center of line
-        container.position = (startPoint + endPoint) / 2
+        container.position = (startingPoint + endingPoint) / 2
         
         // 2. Move Up (Y-Axis)
         // We calculate bgHeight from the mesh bounds to know how much to lift it

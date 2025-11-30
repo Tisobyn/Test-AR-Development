@@ -14,9 +14,9 @@
             filePath = "Test AR Development/Views/ARMeasuremens/Managers/LengthMeasureManager.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "48"
-            endingLineNumber = "48"
-            landmarkName = "addPointTapped()"
+            startingLineNumber = "60"
+            endingLineNumber = "60"
+            landmarkName = "addPointMarker()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
