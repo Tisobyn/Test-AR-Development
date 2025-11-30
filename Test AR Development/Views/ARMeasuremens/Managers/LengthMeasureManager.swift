@@ -118,7 +118,16 @@ extension LengthMeasureManager {
             startingPoint: lastPoint.position(relativeTo: nil),
             endingPoint: focus.position(relativeTo: nil)
         )
+        updateTemporaryLine()
         
+    }
+    
+    private func updateTemporaryLine() {
+        guard let tempLineEntity = tempLineEntity,
+              let lastPoint = collisionPoints.last,
+              let focus = self.focus
+        else { return }
+        tempLineEntity.changePoints(lastPoint.position(relativeTo: nil), focus.position(relativeTo: nil))
     }
     
 }
@@ -136,12 +145,7 @@ extension LengthMeasureManager: ARSessionDelegate {
     }
     
     func session(_ session: ARSession, didUpdate frame: ARFrame) {
-        guard let tempLineEntity = tempLineEntity,
-              let lastPoint = collisionPoints.last,
-              let focus = self.focus
-        else { return }
-        print("=== here")
-        tempLineEntity.changePoints(lastPoint.position(relativeTo: nil), focus.position(relativeTo: nil))
+        updateTemporaryLine()
     }
     
     
