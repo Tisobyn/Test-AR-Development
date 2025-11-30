@@ -58,8 +58,6 @@ final class LineEntity: Entity, HasAnchoring {
     }
     
     private func addDistanceLabel(distance: Float, startPoint: SIMD3<Float>, endPoint: SIMD3<Float>) {
-        guard let arView = arView else { return }
-        
         // A. Create components using subfunctions
         let textEntity = createDistanceLabelTextEntity(distance: distance)
         

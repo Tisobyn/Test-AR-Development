@@ -22,6 +22,7 @@ class LengthMeasureManager: NSObject, ObservableObject, ARMeasureManager {
 
     private var collisionPoints: [AnchorEntity] = [] 
     private var canDrawLine: Bool = false
+    private var canDrawTempLine: Bool = false
     
     @Published var message: String = "Starting AR..."
     @Published var status: String = ""
@@ -47,6 +48,7 @@ class LengthMeasureManager: NSObject, ObservableObject, ARMeasureManager {
     func addPointTapped() {
         addPointMarker()
         if canDrawLine { addLineMarker() }
+        if canDrawTempLine { initializeTemporaryLine() }
     }
     
 }
@@ -64,6 +66,7 @@ extension LengthMeasureManager {
         arView.scene.addAnchor(anchor)
         collisionPoints.append(anchor)
         canDrawLine = collisionPoints.count >= 2
+        canDrawTempLine = collisionPoints.count > 0
     }
     
     private func addLineMarker() {
@@ -79,6 +82,20 @@ extension LengthMeasureManager {
         return focus.position(relativeTo: nil)
     }
 
+    private func initializeTemporaryLine() {
+        guard canDrawTempLine else { return }
+        guard
+            let focus = focus,
+            let arView = self.arView,
+            let lastPoint = self.collisionPoints.last
+        else { return }
+        
+        self.tempLineEntity = TemporalLineEntity(
+            on: arView,
+            startingPoint: lastPoint.position(relativeTo: nil),
+            endingPoint: focus.position(relativeTo: nil)
+        )
+    }
 }
 
 // Function for UI used in ARSessionDelegate
@@ -105,23 +122,6 @@ extension LengthMeasureManager {
         self.focus = CircularFocusEntity(on: arView, style: .classic())
     }
     
-    private func initializeTemporaryLine(by trackingState: ARCamera.TrackingState) {
-        guard case .normal = trackingState else { return }
-        guard
-            let focus = focus,
-            let arView = self.arView,
-            let lastPoint = self.collisionPoints.last
-        else { return }
-        
-        self.tempLineEntity = TemporalLineEntity(
-            on: arView,
-            startingPoint: lastPoint.position(relativeTo: nil),
-            endingPoint: focus.position(relativeTo: nil)
-        )
-        updateTemporaryLine()
-        
-    }
-    
     private func updateTemporaryLine() {
         guard let tempLineEntity = tempLineEntity,
               let lastPoint = collisionPoints.last,
@@ -140,7 +140,6 @@ extension LengthMeasureManager: ARSessionDelegate {
 
         DispatchQueue.main.async {
             self.ensureFocusEntity(by: camera.trackingState)
-            self.initializeTemporaryLine(by: camera.trackingState)
         }
     }
     
