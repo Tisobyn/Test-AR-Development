@@ -41,7 +41,7 @@ struct MeasurementView: View {
                     
                     Spacer()
                     Button {
-                        lengthManager.cutLine()
+                        lengthManager.cutMeasurement()
                     } label: {
                         Image(systemName: "scissors")
                             .font(.system(size: 24, weight: .bold))

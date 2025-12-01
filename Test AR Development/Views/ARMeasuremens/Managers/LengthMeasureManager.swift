@@ -53,7 +53,7 @@ class LengthMeasureManager: NSObject, ObservableObject, ARMeasureManager {
         if canDrawTempLine { initializeTemporaryLine() }
     }
     
-    func cutLine() {
+    func cutMeasurement() {
         canDrawTempLine = false
         canDrawLine = false
         
@@ -67,7 +67,35 @@ class LengthMeasureManager: NSObject, ObservableObject, ARMeasureManager {
     }
     
     func reset() {
-        
+//        guard let arView = arView else { return }
+//        // 1. VISUAL CLEANUP: Remove all existing points/lines from the Scene
+//        // We loop through every "page" and every "point" we stored.
+//        for anchor in arView.scene.anchors {
+//            arView.scene.removeAnchor(anchor)
+//        }
+//        
+//        // Remove the temporary line if it exists
+//        tempLineEntity?.removeFromParent()
+//        tempLineEntity = nil
+//        
+//        // 2. DATA CLEANUP: Reset variables to default
+//        allMeasurements = [[]] // Reset to one empty list
+//        canDrawLine = false
+//        canDrawTempLine = false
+//        
+//        // 3. HARD RESET (Optional): Reset AR Tracking
+//        // This makes the app "forget" the floor and start scanning from scratch.
+//        // It is excellent for fixing tracking errors.
+//        let config = ARWorldTrackingConfiguration()
+//        config.planeDetection = [.horizontal, .vertical]
+//        
+//        // options: .resetTracking (Restarts the camera mapping)
+//        // options: .removeExistingAnchors (Tells ARKit to delete its internal anchors)
+//        arView.session.run(config, options: [.resetTracking, .removeExistingAnchors])
+//        
+//        // 4. UI FEEDBACK
+//        self.message = "Reset complete. Scan surroundings."
+//        self.status = "Status: Resetting..."
     }
     
 }
