@@ -65,10 +65,11 @@ final class TemporalLineEntity: Entity, HasAnchoring {
     private func addDistanceLabel(startingPoint: SIMD3<Float>, endingPoint: SIMD3<Float>) {
         let direction = endingPoint - startingPoint
         let distance = length(direction)
-        // A. Create components using subfunctions
+        
+        // A. Create components
         textModel = createDistanceLabelTextEntity(distance: distance)
         
-        // We need the text bounds to size the background
+        // B. Create Background based on text size
         guard let textMesh = textModel?.model?.mesh else { return }
         bgModel = createDistanceLabelBackground(textBounds: textMesh.bounds)
         
@@ -81,15 +82,21 @@ final class TemporalLineEntity: Entity, HasAnchoring {
         labelContainer?.addChild(bgModel!)
         labelContainer?.addChild(textModel!)
         
-        // D. Position Container
-        // 1. Center of line
-        labelContainer?.position = (startingPoint + endingPoint) / 2
+        // --- D. Position Container (UPDATED) ---
+        
+        // 1. Move to the END point (instead of the middle)
+        labelContainer?.position = endingPoint
         
         // 2. Move Up (Y-Axis)
-        // We calculate bgHeight from the mesh bounds to know how much to lift it
+        // We lift it up by half the background height + a 5cm buffer (0.05)
+        // so it hovers clearly above the user's cursor/finger.
         let bgHeight = bgModel?.model?.mesh.bounds.extents.z ?? 0
-        let halfLineThickness: Float = 0.0025
-        labelContainer?.position.y += (bgHeight / 2) + halfLineThickness
+        let hoverHeight: Float = 0.05
+        
+        labelContainer?.position.y += (bgHeight / 2) + hoverHeight
+        
+        // ---------------------------------------
+        
         labelContainer?.name = lineDistanceLabelName
         self.addChild(labelContainer!)
         

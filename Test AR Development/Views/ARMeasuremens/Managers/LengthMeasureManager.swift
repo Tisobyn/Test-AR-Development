@@ -96,6 +96,7 @@ extension LengthMeasureManager {
 
     private func initializeTemporaryLine() {
         guard canDrawTempLine else { return }
+        guard tempLineEntity == nil else { return }
         guard
             let focus = focus,
             let arView = self.arView,
