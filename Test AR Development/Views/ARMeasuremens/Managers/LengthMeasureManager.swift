@@ -18,8 +18,6 @@ class LengthMeasureManager: NSObject, ObservableObject, ARMeasureManager {
     private var tempLineEntity: TemporalLineEntity?
     private var lineEntity: LineEntity?
     
-    var anchorEntities: [UUID: AnchorEntity] = [:]
-
     private var collisionPoints: [AnchorEntity] = [] 
     private var canDrawLine: Bool = false
     private var canDrawTempLine: Bool = false
@@ -49,6 +47,20 @@ class LengthMeasureManager: NSObject, ObservableObject, ARMeasureManager {
         addPointMarker()
         if canDrawLine { addLineMarker() }
         if canDrawTempLine { initializeTemporaryLine() }
+    }
+    
+    func cutLine() {
+        canDrawTempLine = false
+        canDrawLine = false
+        
+    }
+    
+    func changeSelectedTool(_ tool: MeasurementTool) {
+        
+    }
+    
+    func reset() {
+        
     }
     
 }

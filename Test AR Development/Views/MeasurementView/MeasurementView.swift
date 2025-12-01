@@ -23,16 +23,67 @@ struct MeasurementView: View {
             
             VStack {
                 Spacer()
+                
+                
                 Button {
                     lengthManager.addPointTapped()
                 } label: {
                     Image(systemName: "plus")
-                        .font(.system(size: 48, weight: .bold))
+                        .font(.system(size: 24, weight: .bold))
                         .foregroundColor(.white)
                         .padding()
-                        .background(Color.blue)
+                        .background(Color.white)
                         .clipShape(Circle())
                         .shadow(radius: 10)
+                }
+                
+                HStack(alignment: .center) {
+                    
+                    Spacer()
+                    Button {
+                        lengthManager.cutLine()
+                    } label: {
+                        Image(systemName: "scissors")
+                            .font(.system(size: 24, weight: .bold))
+                            .foregroundColor(.white)
+                            .padding()
+                            .background(Color.red)
+                            .clipShape(Circle())
+                            .shadow(radius: 10)
+                    }
+                    
+                    
+                    Menu {
+                        ForEach(MeasurementTool.allCases, id: \.self) { tool in
+                            Button {
+                                lengthManager.changeSelectedTool(tool)
+                            } label: {
+                                Label(tool.rawValue, systemImage: "checkmark")
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "wrench.and.screwdriver")
+                            .font(.system(size: 24, weight: .bold))
+                            .foregroundColor(.white)
+                            .padding()
+                            .background(Color.blue)
+                            .clipShape(Circle())
+                            .shadow(radius: 10)
+                    }
+                    
+                    Button {
+                        lengthManager.reset()
+                    } label: {
+                        Image(systemName: "arrow.counterclockwise")
+                            .font(.system(size: 24, weight: .bold))
+                            .foregroundColor(.white)
+                            .padding()
+                            .background(Color.orange)
+                            .clipShape(Circle())
+                            .shadow(radius: 10)
+                    }
+                    
+                    Spacer()
                 }
                 .padding(.bottom, 30)
 
