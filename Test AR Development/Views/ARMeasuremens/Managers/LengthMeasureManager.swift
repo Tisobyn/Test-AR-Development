@@ -17,8 +17,12 @@ class LengthMeasureManager: NSObject, ObservableObject, ARMeasureManager {
     private var focus: CircularFocusEntity?
     private var tempLineEntity: TemporalLineEntity?
     private var lineEntity: LineEntity?
+
+    private var allMeasurements: [[AnchorEntity]] = [[]]
+    private var currentMeasurementPoints: [AnchorEntity] {
+        return allMeasurements.last ?? []
+    }
     
-    private var collisionPoints: [AnchorEntity] = [] 
     private var canDrawLine: Bool = false
     private var canDrawTempLine: Bool = false
     
@@ -53,6 +57,9 @@ class LengthMeasureManager: NSObject, ObservableObject, ARMeasureManager {
         canDrawTempLine = false
         canDrawLine = false
         
+        if !(currentMeasurementPoints.isEmpty) {
+            allMeasurements.append([])
+        }
     }
     
     func changeSelectedTool(_ tool: MeasurementTool) {
@@ -76,16 +83,20 @@ extension LengthMeasureManager {
         let anchor = AnchorEntity(world: pointPosition)
         anchor.addChild(pointMarker)
         arView.scene.addAnchor(anchor)
-        collisionPoints.append(anchor)
-        canDrawLine = collisionPoints.count >= 2
-        canDrawTempLine = collisionPoints.count > 0
+        
+        if var currentSession = allMeasurements.last {
+            currentSession.append(anchor)
+            allMeasurements[allMeasurements.count - 1] = currentSession
+        }
+        canDrawLine = currentMeasurementPoints.count >= 2
+        canDrawTempLine = currentMeasurementPoints.count > 0
     }
     
     private func addLineMarker() {
         guard let arView = arView else { return }
-        let lastIndexOfPoints = collisionPoints.count - 1
-        let startingPoint = collisionPoints[lastIndexOfPoints-1].position(relativeTo: nil)
-        let endingPoint = collisionPoints[lastIndexOfPoints].position(relativeTo: nil)
+        let lastIndexOfPoints = currentMeasurementPoints.count - 1
+        let startingPoint = currentMeasurementPoints[lastIndexOfPoints-1].position(relativeTo: nil)
+        let endingPoint = currentMeasurementPoints[lastIndexOfPoints].position(relativeTo: nil)
         _ = LineEntity(on: arView, startingPoint: startingPoint, endingPoint: endingPoint)
     }
     
@@ -100,7 +111,7 @@ extension LengthMeasureManager {
         guard
             let focus = focus,
             let arView = self.arView,
-            let lastPoint = self.collisionPoints.last
+            let lastPoint = self.currentMeasurementPoints.last
         else { return }
         
         self.tempLineEntity = TemporalLineEntity(
@@ -137,7 +148,7 @@ extension LengthMeasureManager {
     
     private func updateTemporaryLine() {
         guard let tempLineEntity = tempLineEntity,
-              let lastPoint = collisionPoints.last,
+              let lastPoint = currentMeasurementPoints.last,
               let focus = self.focus
         else { return }
         tempLineEntity.changePoints(lastPoint.position(relativeTo: nil), focus.position(relativeTo: nil))
