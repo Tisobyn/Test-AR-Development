@@ -66,6 +66,10 @@ class LengthMeasureManager: NSObject, ObservableObject, ARMeasureManager {
         
     }
     
+    func undoLastPointAndLine() {
+        
+    }
+    
     func reset() {
 //        guard let arView = arView else { return }
 //        // 1. VISUAL CLEANUP: Remove all existing points/lines from the Scene
