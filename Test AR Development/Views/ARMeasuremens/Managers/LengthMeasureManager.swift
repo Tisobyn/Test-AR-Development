@@ -18,7 +18,11 @@ class LengthMeasureManager: NSObject, ObservableObject, ARMeasureManager {
     private var tempLineEntity: TemporalLineEntity?
     private var lineEntity: LineEntity?
 
-    private var allMeasurementsPoints: [[AnchorEntity]] = [[]]
+    private var allMeasurementsPoints: [[AnchorEntity]] = [[]] {
+        didSet {
+            updatePreviewData()
+        }
+    }
     private var allMeasurementsLines: [LineEntity] = []
     private var currentMeasurementPoints: [AnchorEntity] {
         return allMeasurementsPoints.last ?? []
@@ -26,6 +30,8 @@ class LengthMeasureManager: NSObject, ObservableObject, ARMeasureManager {
     
     private var canDrawLine: Bool = false
     private var canDrawTempLine: Bool = false
+    
+    @Published var previewData: [[SIMD3<Float>]] = []
     
     @Published var selectedTool: MeasurementTool = .length
     
@@ -40,6 +46,7 @@ class LengthMeasureManager: NSObject, ObservableObject, ARMeasureManager {
     
     func setupARView(_ arView: ARView) {
         self.arView = arView
+        arView.scene
         let arConfig = ARWorldTrackingConfiguration()
         arConfig.planeDetection = selectedTool.planeDetectionMode
         arView.session.run(arConfig)
@@ -148,6 +155,20 @@ extension LengthMeasureManager {
             startingPoint: lastPoint.position(relativeTo: nil),
             endingPoint: focus.position(relativeTo: nil)
         )
+    }
+    
+    private func updatePreviewData() {
+        // Convert heavy AnchorEntities to lightweight coordinates
+        let newData = allMeasurementsPoints.map { section in
+            section.map { anchor in
+                anchor.position(relativeTo: nil)
+            }
+        }
+        
+        // Publish the change to the UI
+        DispatchQueue.main.async {
+            self.previewData = newData
+        }
     }
 }
 

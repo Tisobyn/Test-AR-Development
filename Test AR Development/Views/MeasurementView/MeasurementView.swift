@@ -8,14 +8,38 @@ struct MeasurementView: View {
     
     var body: some View {
         ZStack {
-            ARMeasurementView(manager: lengthManager)
-                .ignoresSafeArea(.all)
+            StableARView(manager: lengthManager)
+
             
             VStack {
-                Text(lengthManager.message)
-                    .foregroundStyle(.red)
-                Text(lengthManager.status)
-                    .foregroundStyle(.yellow)
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading) {
+                        Text(lengthManager.message)
+                            .font(.caption)
+                            .padding(8)
+                            .background(.thinMaterial)
+                            .cornerRadius(8)
+                        Text(lengthManager.status)
+                            .font(.caption)
+                            .padding(8)
+                            .background(.thinMaterial)
+                            .cornerRadius(8)
+                    }
+                    .padding(.leading, 8)
+                    
+                    Spacer()
+                    
+                    // --- REAL TIME PREVIEW (Mini Map) ---
+                    MeasurementMiniMap(points: lengthManager.previewData)
+                        .frame(width: 150, height: 150)
+                        .cornerRadius(12)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.white.opacity(0.5), lineWidth: 2)
+                        )
+                        .shadow(radius: 10)
+                }
+                
                 Spacer()
             }
             
