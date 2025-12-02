@@ -14,8 +14,8 @@ import Combine
 final class TemporalLineEntity: Entity, HasAnchoring {
     
     internal weak var arView: ARView?
-    let lineEntityName = "TemporalLineEntity"
-    let lineDistanceLabelName = "TemporalDistanceEntity"
+    static let lineEntityName = "TemporalLineEntity"
+    static let lineDistanceLabelName = "TemporalDistanceEntity"
     
     private var lineEntity: ModelEntity?
     private var labelContainer: Entity?
@@ -34,6 +34,7 @@ final class TemporalLineEntity: Entity, HasAnchoring {
         self.startingPoint = startingPoint
         self.endingPoint = endingPoint
         super.init()
+        self.name = TemporalLineEntity.lineEntityName
         addLine(startingPoint: startingPoint, endingPoint: endingPoint)
         addDistanceLabel(startingPoint: startingPoint, endingPoint: endingPoint)
         arView.scene.addAnchor(self)
@@ -47,7 +48,7 @@ final class TemporalLineEntity: Entity, HasAnchoring {
         let direction = endingPoint - startingPoint
         let distance = length(direction)
         lineEntity = createLineEntity(distance: distance)
-        lineEntity?.name = lineEntityName
+        lineEntity?.name = TemporalLineEntity.lineEntityName
         self.addChild(lineEntity!)
     }
     
@@ -97,7 +98,7 @@ final class TemporalLineEntity: Entity, HasAnchoring {
         
         // ---------------------------------------
         
-        labelContainer?.name = lineDistanceLabelName
+        labelContainer?.name = TemporalLineEntity.lineDistanceLabelName
         self.addChild(labelContainer!)
         
         // E. Billboard Logic

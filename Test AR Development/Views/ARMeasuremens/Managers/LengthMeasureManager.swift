@@ -60,6 +60,9 @@ class LengthMeasureManager: NSObject, ObservableObject, ARMeasureManager {
         if !(currentMeasurementPoints.isEmpty) {
             allMeasurements.append([])
         }
+        
+        tempLineEntity?.removeFromParent()
+        tempLineEntity = nil
     }
     
     func changeSelectedTool(_ tool: MeasurementTool) {
@@ -71,35 +74,47 @@ class LengthMeasureManager: NSObject, ObservableObject, ARMeasureManager {
     }
     
     func reset() {
-//        guard let arView = arView else { return }
-//        // 1. VISUAL CLEANUP: Remove all existing points/lines from the Scene
-//        // We loop through every "page" and every "point" we stored.
-//        for anchor in arView.scene.anchors {
-//            arView.scene.removeAnchor(anchor)
-//        }
-//        
-//        // Remove the temporary line if it exists
-//        tempLineEntity?.removeFromParent()
-//        tempLineEntity = nil
-//        
-//        // 2. DATA CLEANUP: Reset variables to default
-//        allMeasurements = [[]] // Reset to one empty list
-//        canDrawLine = false
-//        canDrawTempLine = false
-//        
-//        // 3. HARD RESET (Optional): Reset AR Tracking
-//        // This makes the app "forget" the floor and start scanning from scratch.
-//        // It is excellent for fixing tracking errors.
-//        let config = ARWorldTrackingConfiguration()
-//        config.planeDetection = [.horizontal, .vertical]
-//        
-//        // options: .resetTracking (Restarts the camera mapping)
-//        // options: .removeExistingAnchors (Tells ARKit to delete its internal anchors)
-//        arView.session.run(config, options: [.resetTracking, .removeExistingAnchors])
-//        
-//        // 4. UI FEEDBACK
-//        self.message = "Reset complete. Scan surroundings."
-//        self.status = "Status: Resetting..."
+        guard let arView = arView else { return }
+        
+        // --- 1. IDENTIFY VICTIMS (Snapshot) ---
+        // We look through the scene and make a list of everything that needs to go.
+        // We filter into a NEW array so we don't modify the active scene list yet.
+        
+        let anchorsToRemove = arView.scene.anchors.filter { anchor in
+            // Check for Lines
+            if anchor.name == LineEntity.enityName || anchor.name == TemporalLineEntity.lineEntityName {
+                return true
+            }
+            // Check for Points (If your point anchors have a specific name, check it here too)
+            // If points don't have names, we rely on the 'allMeasurements' loop below.
+            return false
+        }
+        
+        // --- 2. EXECUTE REMOVAL ---
+        
+        // A. Remove the lines we found in the snapshot
+        for anchor in anchorsToRemove {
+            arView.scene.removeAnchor(anchor)
+        }
+        
+        // B. Remove Points (From your data array)
+        // This is safe because we aren't looping the scene directly
+        for session in allMeasurements {
+            for anchor in session {
+                arView.scene.removeAnchor(anchor)
+            }
+        }
+        
+        // --- 3. CLEANUP REST ---
+        
+        tempLineEntity?.removeFromParent()
+        tempLineEntity = nil
+        
+        allMeasurements = [[]]
+        canDrawLine = false
+        canDrawTempLine = false
+        
+        self.message = "Cleared. Ready to measure."
     }
     
 }

@@ -14,7 +14,7 @@ import Combine
 final class LineEntity: Entity, HasAnchoring {
     
     internal weak var arView: ARView?
-    let enityName = "LineEntity"
+    static let enityName = "LineEntity"
     private var startingPoint: SIMD3<Float>
     private var endingPoint: SIMD3<Float>
     
@@ -25,7 +25,7 @@ final class LineEntity: Entity, HasAnchoring {
         self.startingPoint = startingPoint
         self.endingPoint = endingPoint
         super.init()
-        self.name = enityName
+        self.name = LineEntity.enityName
         addLine(startPoint: startingPoint, endPoint: endingPoint)
         arView.scene.addAnchor(self)
     }
@@ -51,7 +51,7 @@ final class LineEntity: Entity, HasAnchoring {
         let cylinder = MeshResource.generateBox(size: [0.005, 0.005, distance], cornerRadius: 0.0025)
         let material = UnlitMaterial(color: .white)
         let entity = ModelEntity(mesh: cylinder, materials: [material])
-        entity.name = enityName
+        entity.name = LineEntity.enityName
         entity.position = (startingPoint + endingPoint) / 2
         entity.look(at: endingPoint, from: entity.position, relativeTo: nil)
         return entity

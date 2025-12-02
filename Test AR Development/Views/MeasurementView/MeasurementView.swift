@@ -53,23 +53,24 @@ struct MeasurementView: View {
                     }
                     
                     
-                    Menu {
-                        ForEach(MeasurementTool.allCases, id: \.self) { tool in
-                            Button {
-                                lengthManager.changeSelectedTool(tool)
-                            } label: {
-                                Label(tool.rawValue, systemImage: "checkmark")
-                            }
-                        }
-                    } label: {
-                        Image(systemName: "wrench.and.screwdriver")
-                            .font(.system(size: 24, weight: .bold))
-                            .foregroundColor(.white)
-                            .padding()
-                            .background(Color.blue)
-                            .clipShape(Circle())
-                            .shadow(radius: 10)
-                    }
+//                    Menu {
+//                        ForEach(MeasurementTool.allCases, id: \.self) { tool in
+//                            Button {
+//                                lengthManager.changeSelectedTool(tool)
+//                            } label: {
+//                                Label(tool.rawValue, systemImage: "checkmark")
+//                            }
+//                        }
+//                    } label: {
+//                        Image(systemName: "wrench.and.screwdriver")
+//                            .font(.system(size: 24, weight: .bold))
+//                            .foregroundColor(.white)
+//                            .padding()
+//                            .background(Color.blue)
+//                            .clipShape(Circle())
+//                            .shadow(radius: 10)
+//                    }
+                    Spacer()
                     
                     Button {
                         lengthManager.reset()
