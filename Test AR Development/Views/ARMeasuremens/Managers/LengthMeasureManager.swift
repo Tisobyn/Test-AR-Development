@@ -46,7 +46,6 @@ class LengthMeasureManager: NSObject, ObservableObject, ARMeasureManager {
     
     func setupARView(_ arView: ARView) {
         self.arView = arView
-        arView.scene
         let arConfig = ARWorldTrackingConfiguration()
         arConfig.planeDetection = selectedTool.planeDetectionMode
         arView.session.run(arConfig)

@@ -29,15 +29,7 @@ struct MeasurementView: View {
                     
                     Spacer()
                     
-                    // --- REAL TIME PREVIEW (Mini Map) ---
-                    MeasurementMiniMap(points: lengthManager.previewData)
-                        .frame(width: 150, height: 150)
-                        .cornerRadius(12)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.white.opacity(0.5), lineWidth: 2)
-                        )
-                        .shadow(radius: 10)
+                    StableMiniMap(lengthManager: lengthManager)
                 }
                 
                 Spacer()
