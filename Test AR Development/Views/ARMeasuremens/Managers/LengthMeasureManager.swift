@@ -27,6 +27,8 @@ class LengthMeasureManager: NSObject, ObservableObject, ARMeasureManager {
     private var canDrawLine: Bool = false
     private var canDrawTempLine: Bool = false
     
+    @Published var selectedTool: MeasurementTool = .length
+    
     @Published var message: String = "Starting AR..."
     @Published var status: String = ""
     
@@ -39,7 +41,7 @@ class LengthMeasureManager: NSObject, ObservableObject, ARMeasureManager {
     func setupARView(_ arView: ARView) {
         self.arView = arView
         let arConfig = ARWorldTrackingConfiguration()
-        arConfig.planeDetection = [.horizontal, .vertical]
+        arConfig.planeDetection = selectedTool.planeDetectionMode
         arView.session.run(arConfig)
         arView.session.delegate = self
         
@@ -67,7 +69,8 @@ class LengthMeasureManager: NSObject, ObservableObject, ARMeasureManager {
     }
     
     func changeSelectedTool(_ tool: MeasurementTool) {
-        
+        self.selectedTool = tool
+        resetTracking()
     }
     
     func undoLastPointAndLine() {
@@ -91,6 +94,7 @@ class LengthMeasureManager: NSObject, ObservableObject, ARMeasureManager {
     func reset() {
         removeAllPointsAndLinesAnchors()
         clearAllData()
+        resetTracking()
     }
     
 }
@@ -150,7 +154,7 @@ extension LengthMeasureManager {
 // Functions
 
 extension LengthMeasureManager {
-    
+        
     private func removeAllPointsAndLinesAnchors() {
         guard let arView else { return }
         let itemsToRemove = arView.scene.anchors.filter { anchor in
@@ -173,6 +177,18 @@ extension LengthMeasureManager {
         tempLineEntity?.removeFromParent()
         tempLineEntity = nil
         self.message = "Cleared. Ready to measure."
+    }
+    
+    private func resetTracking() {
+        guard let arView = arView else { return }
+        focus?.destroy()
+        focus = nil
+        let config = ARWorldTrackingConfiguration()
+        config.planeDetection = selectedTool.planeDetectionMode
+        arView.session.run(config, options: [.resetTracking, .removeExistingAnchors])
+        
+        // 3. UI FEEDBACK
+        self.message = "Reset complete. Scan surroundings."
     }
     
     private func recheckTempLine() {
@@ -199,27 +215,18 @@ extension LengthMeasureManager {
     
     private func undoLastPoint() {
         guard let arView = arView else { return }
-        
-        // Get the active session
         guard var currentSession = allMeasurementsPoints.last, !currentSession.isEmpty else { return }
-        
-        // 1. Pop the last anchor from the array
         let pointAnchor = currentSession.removeLast()
-        
-        // 2. Remove it from the Scene
         arView.scene.removeAnchor(pointAnchor)
-        
-        // 3. Save the modified array back to the main data structure
         allMeasurementsPoints[allMeasurementsPoints.count - 1] = currentSession
     }
     
     private func undoLastLine() {
         guard let arView = arView else { return }
     
-        // Get the active session
-        guard var lineAnchor = allMeasurementsLines.last else { return }
-        arView.scene.removeAnchor(lineAnchor)
-        allMeasurementsLines.removeLast()
+        if let lineAnchor = allMeasurementsLines.popLast() {
+            arView.scene.removeAnchor(lineAnchor)
+        }
     }
     
 }

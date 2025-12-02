@@ -53,24 +53,17 @@ struct MeasurementView: View {
                     }
                     
                     
-//                    Menu {
-//                        ForEach(MeasurementTool.allCases, id: \.self) { tool in
-//                            Button {
-//                                lengthManager.changeSelectedTool(tool)
-//                            } label: {
-//                                Label(tool.rawValue, systemImage: "checkmark")
-//                            }
-//                        }
-//                    } label: {
-//                        Image(systemName: "wrench.and.screwdriver")
-//                            .font(.system(size: 24, weight: .bold))
-//                            .foregroundColor(.white)
-//                            .padding()
-//                            .background(Color.blue)
-//                            .clipShape(Circle())
-//                            .shadow(radius: 10)
-//                    }
-                    Spacer()
+                    Button {
+                        lengthManager.reset()
+                    } label: {
+                        Image(systemName: "arrow.counterclockwise")
+                            .font(.system(size: 24, weight: .bold))
+                            .foregroundColor(.white)
+                            .padding()
+                            .background(Color.red)
+                            .clipShape(Circle())
+                            .shadow(radius: 10)
+                    }
                     
                     Button {
                         lengthManager.undoLastPointAndLine()
@@ -85,6 +78,31 @@ struct MeasurementView: View {
                     }
                     
                     Spacer()
+                    
+                    Spacer()
+                    
+                    Menu {
+                        // MAIN TOOLS
+                        ForEach(MeasurementTool.allCases, id: \.id) { tool in
+                            // ROOM PLANS -> SHOW SUBTOOLS MENU
+                            Button {
+                                lengthManager.changeSelectedTool(tool)
+                            } label: {
+                                Label(
+                                    tool.id,
+                                    systemImage: lengthManager.selectedTool == tool ? "checkmark" : ""
+                                )
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "wrench.and.screwdriver")
+                            .font(.system(size: 24, weight: .bold))
+                            .foregroundColor(.white)
+                            .padding()
+                            .background(Color.blue)
+                            .clipShape(Circle())
+                            .shadow(radius: 10)
+                    }
                 }
                 .padding(.bottom, 30)
 
