@@ -18,9 +18,10 @@ class LengthMeasureManager: NSObject, ObservableObject, ARMeasureManager {
     private var tempLineEntity: TemporalLineEntity?
     private var lineEntity: LineEntity?
 
-    private var allMeasurements: [[AnchorEntity]] = [[]]
+    private var allMeasurementsPoints: [[AnchorEntity]] = [[]]
+    private var allMeasurementsLines: [LineEntity] = []
     private var currentMeasurementPoints: [AnchorEntity] {
-        return allMeasurements.last ?? []
+        return allMeasurementsPoints.last ?? []
     }
     
     private var canDrawLine: Bool = false
@@ -58,7 +59,7 @@ class LengthMeasureManager: NSObject, ObservableObject, ARMeasureManager {
         canDrawLine = false
         
         if !(currentMeasurementPoints.isEmpty) {
-            allMeasurements.append([])
+            allMeasurementsPoints.append([])
         }
         
         tempLineEntity?.removeFromParent()
@@ -70,7 +71,21 @@ class LengthMeasureManager: NSObject, ObservableObject, ARMeasureManager {
     }
     
     func undoLastPointAndLine() {
+        switch currentMeasurementPoints.count {
+        case 0:
+            if allMeasurementsPoints.count > 1 {
+                undoCut()
+            }
+        case 1:
+            undoLastPoint()
+            recheckTempLine()
+        default:
+            undoLastPoint()
+            undoLastLine()
+            recheckTempLine()
+        }
         
+        self.message = "Undo last step"
     }
     
     func reset() {
@@ -93,9 +108,9 @@ extension LengthMeasureManager {
         anchor.addChild(pointMarker)
         arView.scene.addAnchor(anchor)
         
-        if var currentSession = allMeasurements.last {
+        if var currentSession = allMeasurementsPoints.last {
             currentSession.append(anchor)
-            allMeasurements[allMeasurements.count - 1] = currentSession
+            allMeasurementsPoints[allMeasurementsPoints.count - 1] = currentSession
         }
         canDrawLine = currentMeasurementPoints.count >= 2
         canDrawTempLine = currentMeasurementPoints.count > 0
@@ -106,7 +121,8 @@ extension LengthMeasureManager {
         let lastIndexOfPoints = currentMeasurementPoints.count - 1
         let startingPoint = currentMeasurementPoints[lastIndexOfPoints-1].position(relativeTo: nil)
         let endingPoint = currentMeasurementPoints[lastIndexOfPoints].position(relativeTo: nil)
-        _ = LineEntity(on: arView, startingPoint: startingPoint, endingPoint: endingPoint)
+        let lineEntity = LineEntity(on: arView, startingPoint: startingPoint, endingPoint: endingPoint)
+        allMeasurementsLines.append(lineEntity)
     }
     
     private func calculatePointPosition() -> SIMD3<Float> {
@@ -150,13 +166,62 @@ extension LengthMeasureManager {
     
     private func clearAllData() {
         guard arView != nil else { return }
-        allMeasurements = [[]]
+        allMeasurementsPoints = [[]]
+        allMeasurementsLines = []
         canDrawLine = false
         canDrawTempLine = false
         tempLineEntity?.removeFromParent()
         tempLineEntity = nil
         self.message = "Cleared. Ready to measure."
     }
+    
+    private func recheckTempLine() {
+        tempLineEntity?.removeFromParent()
+        tempLineEntity = nil
+        
+        // 5. Update State
+        let count = currentMeasurementPoints.count
+        canDrawLine = count >= 2
+        canDrawTempLine = count > 0
+        
+        // 6. Restart Temp Line (If there is still a point left to connect to)
+        if canDrawTempLine {
+            initializeTemporaryLine()
+        }
+    }
+    
+    private func undoCut() {
+        allMeasurementsPoints.removeLast()
+        canDrawLine = currentMeasurementPoints.count >= 2
+        canDrawTempLine = currentMeasurementPoints.count > 0
+        initializeTemporaryLine()
+    }
+    
+    private func undoLastPoint() {
+        guard let arView = arView else { return }
+        
+        // Get the active session
+        guard var currentSession = allMeasurementsPoints.last, !currentSession.isEmpty else { return }
+        
+        // 1. Pop the last anchor from the array
+        let pointAnchor = currentSession.removeLast()
+        
+        // 2. Remove it from the Scene
+        arView.scene.removeAnchor(pointAnchor)
+        
+        // 3. Save the modified array back to the main data structure
+        allMeasurementsPoints[allMeasurementsPoints.count - 1] = currentSession
+    }
+    
+    private func undoLastLine() {
+        guard let arView = arView else { return }
+    
+        // Get the active session
+        guard var lineAnchor = allMeasurementsLines.last else { return }
+        arView.scene.removeAnchor(lineAnchor)
+        allMeasurementsLines.removeLast()
+    }
+    
 }
 
 // Function for UI used in ARSessionDelegate
@@ -177,10 +242,14 @@ extension LengthMeasureManager {
     }
     
     private func ensureFocusEntity(by trackingState: ARCamera.TrackingState) {
-        guard case .normal = trackingState else { return }
-        guard self.focus == nil else { return }
         guard let arView = self.arView else { return }
-        self.focus = CircularFocusEntity(on: arView, style: .classic())
+        switch trackingState {
+        case .normal:
+            guard self.focus == nil else { return }
+            self.focus = CircularFocusEntity(on: arView, style: .classic())
+        case .limited(_), .notAvailable:
+            guard self.focus != nil else { return }
+        }
     }
     
     private func updateTemporaryLine() {

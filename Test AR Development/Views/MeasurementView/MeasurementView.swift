@@ -73,7 +73,7 @@ struct MeasurementView: View {
                     Spacer()
                     
                     Button {
-                        lengthManager.reset()
+                        lengthManager.undoLastPointAndLine()
                     } label: {
                         Image(systemName: "arrow.counterclockwise")
                             .font(.system(size: 24, weight: .bold))
