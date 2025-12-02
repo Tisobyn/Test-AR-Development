@@ -74,47 +74,8 @@ class LengthMeasureManager: NSObject, ObservableObject, ARMeasureManager {
     }
     
     func reset() {
-        guard let arView = arView else { return }
-        
-        // --- 1. IDENTIFY VICTIMS (Snapshot) ---
-        // We look through the scene and make a list of everything that needs to go.
-        // We filter into a NEW array so we don't modify the active scene list yet.
-        
-        let anchorsToRemove = arView.scene.anchors.filter { anchor in
-            // Check for Lines
-            if anchor.name == LineEntity.enityName || anchor.name == TemporalLineEntity.lineEntityName {
-                return true
-            }
-            // Check for Points (If your point anchors have a specific name, check it here too)
-            // If points don't have names, we rely on the 'allMeasurements' loop below.
-            return false
-        }
-        
-        // --- 2. EXECUTE REMOVAL ---
-        
-        // A. Remove the lines we found in the snapshot
-        for anchor in anchorsToRemove {
-            arView.scene.removeAnchor(anchor)
-        }
-        
-        // B. Remove Points (From your data array)
-        // This is safe because we aren't looping the scene directly
-        for session in allMeasurements {
-            for anchor in session {
-                arView.scene.removeAnchor(anchor)
-            }
-        }
-        
-        // --- 3. CLEANUP REST ---
-        
-        tempLineEntity?.removeFromParent()
-        tempLineEntity = nil
-        
-        allMeasurements = [[]]
-        canDrawLine = false
-        canDrawTempLine = false
-        
-        self.message = "Cleared. Ready to measure."
+        removeAllPointsAndLinesAnchors()
+        clearAllData()
     }
     
 }
@@ -128,6 +89,7 @@ extension LengthMeasureManager {
         let pointPosition = calculatePointPosition()
         let pointMarker = ModelEntity.createPointMarker(color: .white)
         let anchor = AnchorEntity(world: pointPosition)
+        anchor.name = "MeasurementPoint"
         anchor.addChild(pointMarker)
         arView.scene.addAnchor(anchor)
         
@@ -166,6 +128,34 @@ extension LengthMeasureManager {
             startingPoint: lastPoint.position(relativeTo: nil),
             endingPoint: focus.position(relativeTo: nil)
         )
+    }
+}
+
+// Functions
+
+extension LengthMeasureManager {
+    
+    private func removeAllPointsAndLinesAnchors() {
+        guard let arView else { return }
+        let itemsToRemove = arView.scene.anchors.filter { anchor in
+            return anchor.name == "LineEntity" ||
+            anchor.name == "TemporalLineEntity" ||
+            anchor.name == "MeasurementPoint"
+        }
+        
+        for anchor in itemsToRemove {
+            arView.scene.removeAnchor(anchor)
+        }
+    }
+    
+    private func clearAllData() {
+        guard arView != nil else { return }
+        allMeasurements = [[]]
+        canDrawLine = false
+        canDrawTempLine = false
+        tempLineEntity?.removeFromParent()
+        tempLineEntity = nil
+        self.message = "Cleared. Ready to measure."
     }
 }
 
